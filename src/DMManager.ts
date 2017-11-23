@@ -161,16 +161,17 @@ export class DMManager extends Plugin implements IPlugin
 			const channel: TextChannel = this.channels.get(channelID);
 			if (!channel) return;
 			if (message.embeds[0]) message.content += '\n\n**[RichEmbed]**';
-			await this.send(channel, message.author, message.content)
+			await this.send(channel, message)
 				.catch(err => this.sendError(`Failed to send message in #${this.channels.get(channelID).name}\n${err}`));
 		}
 		else
 		{
-			message.delete();
 			const user: User = await this.fetchUser(<TextChannel> message.channel);
+			if (await this.isBlacklisted(user)) return message.channel.send(`This user is blacklisted. No replies will be sent to the user.`);
 			try
 			{
 				await user.send(message.content);
+				message.delete();
 			}
 			catch (err)
 			{
@@ -195,15 +196,20 @@ export class DMManager extends Plugin implements IPlugin
 	 * Send a text message to a managed channel as an embed, spoofing
 	 * the provided user to simulate messages from that user
 	 */
-	private async send(channel: TextChannel, user: User, message: string): Promise<Message>
+	private async send(channel: TextChannel, message: Message): Promise<Message>
 	{
-		return <Message> await channel.send({
-			embed: new RichEmbed()
-				.setColor(8450847)
-				.setAuthor(`${user.username}#${user.discriminator}`, user.avatarURL)
-				.setDescription(message)
-				.setTimestamp()
-		});
+		const user: User = message.author;
+		const embed: RichEmbed = new RichEmbed();
+		embed.setColor(8450847);
+		embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL);
+		embed.setDescription(message.content);
+
+		if (message.attachments.size !== 0) {
+			embed.addField('Attachment:', message.attachments.map(file => file.url))
+		}
+		embed.setTimestamp()
+
+		return <Message> await channel.send({ embed });
 	}
 
 	/**
@@ -211,7 +217,7 @@ export class DMManager extends Plugin implements IPlugin
 	 */
 	private async sendError(message: string): Promise<Message>
 	{
-		return <Message> await (<TextChannel> this.guild.defaultChannel)
+		return <Message> await (<TextChannel> this.guild.channels.first())
 			.send({
 				embed: new RichEmbed()
 					.setColor('#FF0000')
