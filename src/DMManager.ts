@@ -167,7 +167,12 @@ export class DMManager extends Plugin implements IPlugin
 		else
 		{
 			const user: User = await this.fetchUser(<TextChannel> message.channel);
-			if (await this.isBlacklisted(user)) return message.channel.send(`This user is blacklisted. No replies will be sent to the user.`);
+			if (await this.isBlacklisted(user))
+			{
+				message.channel.send(`This user is blacklisted. No replies will be sent to the user.`);
+				return;
+			}
+
 			try
 			{
 				await user.send(message.content);
