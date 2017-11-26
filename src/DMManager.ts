@@ -210,9 +210,9 @@ export class DMManager extends Plugin implements IPlugin
 		embed.setDescription(message.content);
 
 		if (message.attachments.size !== 0) {
-			embed.addField('Attachment:', message.attachments.map(file => file.url))
+			embed.addField('Attachment:', message.attachments.map(file => file.url));
 		}
-		embed.setTimestamp()
+		embed.setTimestamp();
 
 		return <Message> await channel.send({ embed });
 	}
