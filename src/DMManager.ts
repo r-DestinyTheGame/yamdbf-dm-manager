@@ -120,7 +120,7 @@ export class DMManager extends Plugin implements IPlugin
 		}
 		catch (err)
 		{
-			this.sendError(`DMManager: Failed to create channel: '${normalize(user.username)}-${user.discriminator}'\n${err}`);
+			this.sendError(`DMManager: Failed to create channel: '${normalize(user.username)}-${user.discriminator} (${user.id})'\n${err}`);
 		}
 
 		if (newChannel) await newChannel.send({ embed: this.buildUserInfo(user) });
@@ -156,12 +156,15 @@ export class DMManager extends Plugin implements IPlugin
 
 		if (message.channel.type === 'dm')
 		{
+			// Don't process messages the bot sends in the DM
+			if (message.member.user.id === this.client.user.id) { return; }
+
 			const channelID: string = message.author.id === this.client.user.id ?
 				(<DMChannel> message.channel).recipient.id : message.author.id;
 			const channel: TextChannel = this.channels.get(channelID);
 			if (!channel) return;
 			if (message.embeds[0]) message.content += '\n\n**[RichEmbed]**';
-			await this.send(channel, message)
+			await this.send(channel, message, message.member.user)
 				.catch(err => this.sendError(`Failed to send message in #${this.channels.get(channelID).name}\n${err}`));
 		}
 		else
@@ -175,7 +178,11 @@ export class DMManager extends Plugin implements IPlugin
 
 			try
 			{
-				await user.send(message.content);
+				await user.send(message.content + `\n\n-${message.member.tag}`);
+
+				const channelID: string = user.id;
+				const channel: TextChannel = this.channels.get(channelID);
+				await this.send(channel, message, user);
 				message.delete();
 			}
 			catch (err)
@@ -201,11 +208,19 @@ export class DMManager extends Plugin implements IPlugin
 	 * Send a text message to a managed channel as an embed, spoofing
 	 * the provided user to simulate messages from that user
 	 */
-	private async send(channel: TextChannel, message: Message): Promise<Message>
+	private async send(channel: TextChannel, message: Message, user: User): Promise<Message>
 	{
+		var embedColor: string;
 		const user: User = message.author;
 		const embed: RichEmbed = new RichEmbed();
-		embed.setColor(8450847);
+		if (message.member.user.id === user.id) {
+			// Color for incoming messages
+			embedColor = '19D219';
+		} else {
+			// Color for outgoing messages
+			embedColor = '551a8b';
+		}
+		embed.setColor(embedColor);
 		embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL);
 		embed.setDescription(message.content);
 
