@@ -154,17 +154,17 @@ export class DMManager extends Plugin implements IPlugin
 			&& !this.channels.has(message.author.id) && !message.guild)
 			await this.createNewChannel(message.author);
 
+		// Don't process messages the bot sends in the DM
+		if (message.author.id === this.client.user.id) { return; }
+
 		if (message.channel.type === 'dm')
 		{
-			// Don't process messages the bot sends in the DM
-			if (message.member.user.id === this.client.user.id) { return; }
-
 			const channelID: string = message.author.id === this.client.user.id ?
 				(<DMChannel> message.channel).recipient.id : message.author.id;
 			const channel: TextChannel = this.channels.get(channelID);
 			if (!channel) return;
 			if (message.embeds[0]) message.content += '\n\n**[RichEmbed]**';
-			await this.send(channel, message, message.member.user)
+			await this.send(channel, message, message.author)
 				.catch(err => this.sendError(`Failed to send message in #${this.channels.get(channelID).name}\n${err}`));
 		}
 		else
@@ -211,18 +211,21 @@ export class DMManager extends Plugin implements IPlugin
 	private async send(channel: TextChannel, message: Message, reciever: User): Promise<Message>
 	{
 		var embedColor: string;
+		var footer: string;
 		const user: User = message.author;
 		const embed: RichEmbed = new RichEmbed();
-		if (message.member.user.id === reciever.id) {
+		if (message.author.id === reciever.id && message.channel.type === 'dm') {
 			// Color for incoming messages
 			embedColor = '19D219';
+			footer = '';
 		} else {
 			// Color for outgoing messages
 			embedColor = '551a8b';
+			footer = `\n\n-${message.member.user.tag}`;
 		}
 		embed.setColor(embedColor);
 		embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL);
-		embed.setDescription(message.content);
+		embed.setDescription(message.content + footer);
 
 		if (message.attachments.size !== 0) {
 			embed.addField('Attachment:', message.attachments.map(file => file.url));
