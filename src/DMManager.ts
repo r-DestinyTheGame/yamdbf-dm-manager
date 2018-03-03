@@ -178,7 +178,7 @@ export class DMManager extends Plugin implements IPlugin
 
 			try
 			{
-				await user.send(message.content + `\n\n-${message.member.tag}`);
+				await user.send(message.content + `\n\n-${message.member.user.tag}`);
 
 				const channelID: string = user.id;
 				const channel: TextChannel = this.channels.get(channelID);
@@ -208,12 +208,12 @@ export class DMManager extends Plugin implements IPlugin
 	 * Send a text message to a managed channel as an embed, spoofing
 	 * the provided user to simulate messages from that user
 	 */
-	private async send(channel: TextChannel, message: Message, user: User): Promise<Message>
+	private async send(channel: TextChannel, message: Message, reciever: User): Promise<Message>
 	{
 		var embedColor: string;
 		const user: User = message.author;
 		const embed: RichEmbed = new RichEmbed();
-		if (message.member.user.id === user.id) {
+		if (message.member.user.id === reciever.id) {
 			// Color for incoming messages
 			embedColor = '19D219';
 		} else {
