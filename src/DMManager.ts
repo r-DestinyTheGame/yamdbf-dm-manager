@@ -1,4 +1,4 @@
-import { Message, Guild, User, TextChannel, DMChannel, Collection, RichEmbed } from 'discord.js';
+import { Message, Guild, User, TextChannel, DMChannel, Collection, MessageEmbed } from 'discord.js';
 import { ClientStorage, Client, Plugin, IPlugin, PluginConstructor } from 'yamdbf';
 import { normalize } from './Util';
 import { dmManagerFactory } from './dmManagerFactory';
@@ -33,7 +33,7 @@ export class DMManager extends Plugin implements IPlugin
 
 	public async init(): Promise<void>
 	{
-		this.guild = this.client.guilds.get(this._guild);
+		this.guild = this.client.guilds.resolve(this._guild);
 		if (await this.storage.exists('plugin.dmManager.guild')
 			&& await this.storage.get('plugin.dmManager.guild') !== this._guild)
 				await this.clearOpenChannels();
@@ -131,9 +131,9 @@ export class DMManager extends Plugin implements IPlugin
 	 * Create an embed for user info used at the start
 	 * of a new managed channel
 	 */
-	private buildUserInfo(user: User): RichEmbed
+	private buildUserInfo(user: User): MessageEmbed
 	{
-		return new RichEmbed()
+		return new MessageEmbed()
 			.setColor(8450847)
 			.setAuthor(`${user.username}#${user.discriminator} (${user.id})`, user.avatarURL)
 			.setFooter('DM channel started')
@@ -163,7 +163,7 @@ export class DMManager extends Plugin implements IPlugin
 				(<DMChannel> message.channel).recipient.id : message.author.id;
 			const channel: TextChannel = this.channels.get(channelID);
 			if (!channel) return;
-			if (message.embeds[0]) message.content += '\n\n**[RichEmbed]**';
+			if (message.embeds[0]) message.content += '\n\n**[MessageEmbed]**';
 			await this.send(channel, message, message.author)
 				.catch(err => this.sendError(`Failed to send message in #${this.channels.get(channelID).name}\n${err}`));
 		}
@@ -187,7 +187,7 @@ export class DMManager extends Plugin implements IPlugin
 			}
 			catch (err)
 			{
-				message.channel.sendEmbed(new RichEmbed()
+				message.channel.sendEmbed(new MessageEmbed()
 					.setColor('#FF0000')
 					.setTitle('There was an error while sending the message')
 					.setDescription(err));
@@ -201,7 +201,7 @@ export class DMManager extends Plugin implements IPlugin
 	private async fetchUser(channel: TextChannel): Promise<User>
 	{
 		const id: string = this.channels.findKey('id', channel.id);
-		return await this.client.fetchUser(id);
+		return await this.client.users.fetch(id);
 	}
 
 	/**
@@ -213,7 +213,7 @@ export class DMManager extends Plugin implements IPlugin
 		var embedColor: string;
 		var footer: string;
 		const user: User = message.author;
-		const embed: RichEmbed = new RichEmbed();
+		const embed: MessageEmbed = new MessageEmbed();
 		if (message.author.id === reciever.id && message.channel.type === 'dm') {
 			// Color for incoming messages
 			embedColor = '19D219';
@@ -242,7 +242,7 @@ export class DMManager extends Plugin implements IPlugin
 	{
 		return <Message> await (<TextChannel> this.guild.channels.first())
 			.send({
-				embed: new RichEmbed()
+				embed: new MessageEmbed()
 					.setColor('#FF0000')
 					.setTitle('DMManager error')
 					.setDescription(message)
