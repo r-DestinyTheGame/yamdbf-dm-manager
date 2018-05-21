@@ -199,7 +199,7 @@ export class DMManager extends Plugin implements IPlugin
 	 */
 	private async fetchUser(channel: TextChannel): Promise<User>
 	{
-		const id: string = this.channels.findKey('id', channel.id);
+		const id: string = this.channels.findKey(chan => chan.id === channel.id);
 		return await this.client.users.fetch(id);
 	}
 
