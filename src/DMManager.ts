@@ -113,8 +113,7 @@ export class DMManager extends Plugin implements IPlugin
 		let newChannel: TextChannel;
 		try
 		{
-			newChannel = <TextChannel> await this.guild
-				.createChannel(`${normalize(user.username) || 'unicode'}-${user.discriminator}`, 'text');
+			newChannel = <TextChannel> await this.guild.channels.create(`${normalize(user.username) || 'unicode'}-${user.discriminator}`, { overwrites: [{id: '336179293954506753', allowed: ['VIEW_CHANNEL', 'SEND_MESSAGES']}]});
 			this.channels.set(user.id, newChannel);
 			this.storeOpenChannels();
 		}
