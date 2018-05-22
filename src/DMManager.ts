@@ -134,7 +134,7 @@ export class DMManager extends Plugin implements IPlugin
 	{
 		return new MessageEmbed()
 			.setColor(8450847)
-			.setAuthor(`${user.username}#${user.discriminator} (${user.id})`, user.avatarURL)
+			.setAuthor(`${user.username}#${user.discriminator} (${user.id})`, user.avatarURL())
 			.setFooter('DM channel started')
 			.setTimestamp();
 	}
@@ -223,7 +223,7 @@ export class DMManager extends Plugin implements IPlugin
 			footer = `\n\n-${message.member.user.tag}`;
 		}
 		embed.setColor(embedColor);
-		embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL);
+		embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL());
 		embed.setDescription(message.content + footer);
 
 		if (message.attachments.size !== 0) {
