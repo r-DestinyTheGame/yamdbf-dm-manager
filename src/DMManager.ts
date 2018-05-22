@@ -186,7 +186,7 @@ export class DMManager extends Plugin implements IPlugin
 			}
 			catch (err)
 			{
-				message.channel.sendEmbed(new MessageEmbed()
+				message.channel.send(new MessageEmbed()
 					.setColor('#FF0000')
 					.setTitle('There was an error while sending the message')
 					.setDescription(err));
