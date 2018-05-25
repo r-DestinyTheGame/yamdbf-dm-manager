@@ -24,7 +24,7 @@ export class DMManager extends Plugin implements IPlugin
 		this.client = client;
 
 		if (!guild) throw new DMManagerUsageError('Import "dmManager" and pass to plugins with a guild ID');
-		if (!this.client.guilds.has(guild))
+		if (!this.client.guilds.resolve(guild))
 			throw new Error(`DMManager: Failed to find guild with ID '${guild}'`);
 
 		this.storage = this.client.storage;
@@ -113,17 +113,21 @@ export class DMManager extends Plugin implements IPlugin
 		let newChannel: TextChannel;
 		try
 		{
-			newChannel = <TextChannel> await this.guild
-				.createChannel(`${normalize(user.username) || 'unicode'}-${user.discriminator}`, 'text');
+			newChannel = <TextChannel> await this.guild.channels.create(`${normalize(user.username) || 'unicode'}-${user.discriminator}`,
+				{ overwrites: [{id: '336179293954506753', allowed: ['VIEW_CHANNEL', 'SEND_MESSAGES']}]});
 			this.channels.set(user.id, newChannel);
 			this.storeOpenChannels();
+			this.client.logger.info('DMManager', `Created channel. Username: ${user.tag} | ChannelID: ${newChannel.id}`);
 		}
 		catch (err)
 		{
 			this.sendError(`DMManager: Failed to create channel: '${normalize(user.username)}-${user.discriminator} (${user.id})'\n${err}`);
+			this.client.logger.error('DMManager', `Failed to create channel: '${normalize(user.username)}-${user.discriminator} (${user.id})'\n${err}`);
 		}
 
-		if (newChannel) await newChannel.send({ embed: this.buildUserInfo(user) });
+		if (newChannel) { 
+			await this.buildUserInfo(user, newChannel);
+		}
 		return newChannel;
 	}
 
@@ -131,13 +135,20 @@ export class DMManager extends Plugin implements IPlugin
 	 * Create an embed for user info used at the start
 	 * of a new managed channel
 	 */
-	private buildUserInfo(user: User): MessageEmbed
+	private async buildUserInfo(user: User, newChannel: TextChannel): Promise<void>
 	{
-		return new MessageEmbed()
-			.setColor(8450847)
-			.setAuthor(`${user.username}#${user.discriminator} (${user.id})`, user.avatarURL)
-			.setFooter('DM channel started')
-			.setTimestamp();
+		let userInfoEmbed = new MessageEmbed();
+		userInfoEmbed.setColor(8450847);
+		userInfoEmbed.setAuthor(`${user.username}#${user.discriminator} (${user.id})`, user.avatarURL());
+		userInfoEmbed.setFooter('DM channel started');
+		userInfoEmbed.setTimestamp();
+
+		let message: Message;
+		let userStatsEmbed: MessageEmbed = this.client.commands.find(cmd => cmd.name === 'us').action(message, [user.id, '157728722999443456'], true);
+
+		newChannel.send(userInfoEmbed);
+		newChannel.send(userStatsEmbed);
+		return;
 	}
 
 	/**
@@ -164,7 +175,7 @@ export class DMManager extends Plugin implements IPlugin
 			const channel: TextChannel = this.channels.get(channelID);
 			if (!channel) return;
 			if (message.embeds[0]) message.content += '\n\n**[MessageEmbed]**';
-			await this.send(channel, message, message.author)
+			await this.send(channel, message, message.author) 
 				.catch(err => this.sendError(`Failed to send message in #${this.channels.get(channelID).name}\n${err}`));
 		}
 		else
@@ -178,19 +189,22 @@ export class DMManager extends Plugin implements IPlugin
 
 			try
 			{
-				await user.send(message.content + `\n\n-${message.member.user.tag}`);
+				message.delete();
+				await user.send(`${message.content}\n\n-${message.member.user.tag}`);
 
 				const channelID: string = user.id;
 				const channel: TextChannel = this.channels.get(channelID);
 				await this.send(channel, message, user);
-				message.delete();
 			}
 			catch (err)
 			{
-				message.channel.sendEmbed(new MessageEmbed()
+				this.client.logger.error('DMManager', `Error sending message to: '${normalize(user.username)}-${user.discriminator} (${user.id})'\n${err}`);
+				message.channel.send(new MessageEmbed()
 					.setColor('#FF0000')
 					.setTitle('There was an error while sending the message')
 					.setDescription(err));
+				const codeblock: string = '```';
+				message.channel.send(`${codeblock} ${message.content} ${codeblock}`);
 			}
 		}
 	}
@@ -200,7 +214,7 @@ export class DMManager extends Plugin implements IPlugin
 	 */
 	private async fetchUser(channel: TextChannel): Promise<User>
 	{
-		const id: string = this.channels.findKey('id', channel.id);
+		const id: string = this.channels.findKey(chan => chan.id === channel.id);
 		return await this.client.users.fetch(id);
 	}
 
@@ -224,7 +238,7 @@ export class DMManager extends Plugin implements IPlugin
 			footer = `\n\n-${message.member.user.tag}`;
 		}
 		embed.setColor(embedColor);
-		embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL);
+		embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL());
 		embed.setDescription(message.content + footer);
 
 		if (message.attachments.size !== 0) {
