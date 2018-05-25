@@ -144,7 +144,7 @@ export class DMManager extends Plugin implements IPlugin
 		userInfoEmbed.setTimestamp();
 
 		let message: Message;
-		let userStatsEmbed: MessageEmbed = this.client.commands.find(cmd => cmd.name === 'us').action(message, [user.id, '157728722999443456'], true);
+		let userStatsEmbed: MessageEmbed = this.client.commands.find(cmd => cmd.name === 'us').action(message, [user.id], true);
 
 		newChannel.send(userInfoEmbed);
 		newChannel.send(userStatsEmbed);
