@@ -1,5 +1,5 @@
 import { Message, Guild, User, TextChannel, DMChannel, Collection, MessageEmbed } from 'discord.js';
-import { ClientStorage, Client, Plugin, IPlugin, PluginConstructor } from 'yamdbf';
+import { ClientStorage, Client, Plugin, IPlugin, PluginConstructor } from '@yamdbf/core';
 import { normalize } from './Util';
 import { dmManagerFactory } from './dmManagerFactory';
 import { DMManagerUsageError } from './DMManagerUsageError';
