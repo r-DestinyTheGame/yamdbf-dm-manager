@@ -1,5 +1,5 @@
 import { Message, Guild, User, TextChannel, DMChannel, Collection, MessageEmbed } from 'discord.js';
-import { ClientStorage, Client, Plugin, IPlugin, PluginConstructor } from '@yamdbf/core';
+import { GuildStorage, ClientStorage, Client, Plugin, IPlugin, PluginConstructor } from '@yamdbf/core';
 import { normalize } from './Util';
 import { dmManagerFactory } from './dmManagerFactory';
 import { DMManagerUsageError } from './DMManagerUsageError';
@@ -137,16 +137,29 @@ export class DMManager extends Plugin implements IPlugin
 	 */
 	private async buildUserInfo(user: User, newChannel: TextChannel): Promise<void>
 	{
-		let userInfoEmbed = new MessageEmbed();
-		userInfoEmbed.setColor(8450847);
-		userInfoEmbed.setAuthor(`${user.username}#${user.discriminator} (${user.id})`, user.avatarURL());
-		userInfoEmbed.setFooter('DM channel started');
-		userInfoEmbed.setTimestamp();
-
+		const storage: GuildStorage = await this.client.storage.guilds.get(newChannel.guild.id);
 		let message: Message;
-		this.client.commands.find(cmd => cmd.name === 'us').action(message, [user.id, newChannel.guild.id, newChannel.id], true);
-		
-		newChannel.send({ embed: userInfoEmbed });
+
+		// New DM Channel Started
+		if (await storage.settings.exists('dm-newchannel') && await storage.settings.get('dm-newchannel')) {
+			let userInfoEmbed = new MessageEmbed();
+			userInfoEmbed.setColor(8450847);
+			userInfoEmbed.setAuthor(`${user.username}#${user.discriminator} (${user.id})`, user.avatarURL());
+			userInfoEmbed.setFooter('DM channel started');
+			userInfoEmbed.setTimestamp();
+			newChannel.send({ embed: userInfoEmbed });
+		}
+
+		// New DM Channel - Get userstats
+		if (await storage.settings.exists('dm-userstats') && await storage.settings.get('dm-userstats')) {
+			this.client.commands.find(cmd => cmd.name === 'userstats').action(message, [user.id, newChannel.guild.id, newChannel.id], true);
+		}
+
+		// New DM Channel - Get main server history
+		if (await storage.settings.exists('dm-history') && await storage.settings.get('dm-history')) {
+			this.client.commands.find(cmd => cmd.name === 'history').action(message, [user, newChannel.guild, newChannel.id], true);
+		}
+
 		return;
 	}
 

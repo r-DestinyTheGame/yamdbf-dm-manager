@@ -1,6 +1,6 @@
 {
   "name": "yamdbf-dm-manager",
-  "version": "1.3.2dev0",
+  "version": "1.3.3dev0",
   "description": "YAMDBF plugin for viewing and replying to DMs sent to your discord bot",
   "main": "bin/index.js",
   "typings": "bin/index.d.ts",
@@ -27,17 +27,16 @@
   },
   "homepage": "https://github.com/r-DestinyTheGame/yamdbf-dm-manager#readme",
   "dependencies": {
-    "@yamdbf/core": "git+https://github.com/yamdbf/core.git#indev",
     "postinstall-build": "^5.0.1"
   },
   "devDependencies": {
-    "@types/node": "^6.0.46",
+    "@types/node": "^6.0.111",
     "@yamdbf/core": "git+https://github.com/yamdbf/core.git#indev",
     "del": "^3.0.0",
     "gulp": "^3.9.1",
-    "gulp-typescript": "^3.1.5",
-    "tslint": "^5.4.3",
-    "typescript": "^2.4.0"
+    "gulp-typescript": "^3.2.4",
+    "tslint": "^5.10.0",
+    "typescript": "^2.8.4"
   },
   "buildDependencies": [
     "typescript",
