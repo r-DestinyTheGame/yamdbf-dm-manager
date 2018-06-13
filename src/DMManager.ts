@@ -137,7 +137,7 @@ export class DMManager extends Plugin implements IPlugin
 	 */
 	private async buildUserInfo(user: User, newChannel: TextChannel): Promise<void>
 	{
-		const storage: GuildStorage = await this.client.storage.guilds.get(newChannel.guild.id);
+		const storage: GuildStorage = await this.client.storage.guilds.get(config.ServerData.serverId);
 		let message: Message;
 
 		// New DM Channel Started
@@ -152,12 +152,12 @@ export class DMManager extends Plugin implements IPlugin
 
 		// New DM Channel - Get userstats
 		if (await storage.settings.exists('dm-userstats') && await storage.settings.get('dm-userstats')) {
-			this.client.commands.find(cmd => cmd.name === 'userstats').action(message, [user.id, newChannel.guild.id, newChannel.id], true);
+			await this.client.commands.find(cmd => cmd.name === 'us').action(message, [user.id, newChannel.guild.id, newChannel.id], true);
 		}
 
 		// New DM Channel - Get main server history
 		if (await storage.settings.exists('dm-history') && await storage.settings.get('dm-history')) {
-			this.client.commands.find(cmd => cmd.name === 'history').action(message, [user, newChannel.guild, newChannel.id], true);
+			await this.client.commands.find(cmd => cmd.name === 'history').action(message, [user.id, newChannel.guild.id, newChannel.id], true);
 		}
 
 		return;
