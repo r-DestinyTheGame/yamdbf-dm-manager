@@ -137,7 +137,7 @@ export class DMManager extends Plugin implements IPlugin
 	 */
 	private async buildUserInfo(user: User, newChannel: TextChannel): Promise<void>
 	{
-		const storage: GuildStorage = await this.client.storage.guilds.get(config.ServerData.serverId);
+		const storage: GuildStorage = await this.client.storage.guilds.get(this.client.config.ServerData.serverId);
 		let message: Message;
 
 		// New DM Channel Started
