@@ -101,7 +101,9 @@ export class DMManager extends Plugin implements IPlugin
 	private async clearOpenChannels(): Promise<void>
 	{
 		await this.storage.set('plugin.dmManager.openChannels', []);
-		this.channels.clear();
+		if (this.channels) {
+			this.channels.clear();
+		}
 	}
 
 	/**
@@ -125,7 +127,7 @@ export class DMManager extends Plugin implements IPlugin
 			this.client.logger.error('DMManager', `Failed to create channel: '${normalize(user.username)}-${user.discriminator} (${user.id})'\n${err}`);
 		}
 
-		if (newChannel) { 
+		if (newChannel) {
 			await this.buildUserInfo(user, newChannel);
 		}
 		return newChannel;
@@ -187,7 +189,7 @@ export class DMManager extends Plugin implements IPlugin
 			const channel: TextChannel = this.channels.get(channelID);
 			if (!channel) return;
 			if (message.embeds[0]) message.content += '\n\n**[MessageEmbed]**';
-			await this.send(channel, message, message.author) 
+			await this.send(channel, message, message.author)
 				.catch(err => this.sendError(`Failed to send message in #${this.channels.get(channelID).name}\n${err}`));
 		}
 		else
@@ -236,8 +238,8 @@ export class DMManager extends Plugin implements IPlugin
 	 */
 	private async send(channel: TextChannel, message: Message, reciever: User): Promise<Message>
 	{
-		var embedColor: string;
-		var footer: string;
+		let embedColor: string;
+		let footer: string;
 		const user: User = message.author;
 		const embed: MessageEmbed = new MessageEmbed();
 		if (message.author.id === reciever.id && message.channel.type === 'dm') {
