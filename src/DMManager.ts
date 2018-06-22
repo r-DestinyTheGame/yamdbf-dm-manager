@@ -238,21 +238,24 @@ export class DMManager extends Plugin implements IPlugin
 	 */
 	private async send(channel: TextChannel, message: Message, reciever: User): Promise<Message>
 	{
-		let embedColor: string;
-		let footer: string;
-		const user: User = message.author;
 		const embed: MessageEmbed = new MessageEmbed();
-		if (message.author.id === reciever.id && message.channel.type === 'dm') {
-			// Color for incoming messages
-			embedColor = '19D219';
-			footer = '';
-		} else {
-			// Color for outgoing messages
-			embedColor = '551a8b';
-			footer = `\n\n-${message.member.user.tag}`;
+		let embedColor: string = '551a8b';
+		let footer: string = '';
+		const user: User = message.author;
+
+		try {
+			if (user && (user.id === reciever.id && message.channel.type === 'dm')) {
+				// Color for incoming messages
+				embedColor = '19D219';
+			} else {
+				footer = `\n\n-${message.member.user.tag}`;
+			}
+			embed.setColor(embedColor);
+			embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL());
+		} catch {
+			this.client.logger.error(`DMManager`, `Error sending message to: '${normalize(user.username)}-${user.discriminator} (${user.id})'\n${err}`);
 		}
-		embed.setColor(embedColor);
-		embed.setAuthor(`${user.tag} (${user.id})`, user.avatarURL());
+
 		embed.setDescription(message.content + footer);
 
 		if (message.attachments.size !== 0) {
